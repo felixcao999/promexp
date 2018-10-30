@@ -8,6 +8,10 @@ import (
 
 var Config Node2EsConfig
 
+const (
+	ENCRYPT_KEY = "node2es enc key"
+)
+
 type Node2EsConfig struct {
 	Prometheus struct {
 		Url string

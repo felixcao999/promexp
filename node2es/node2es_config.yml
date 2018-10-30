@@ -2,4 +2,4 @@ prometheus:
   url: 'http://10.1.236.157:9090'
 es:
   urls: ['http://10.1.236.157:9200/']
-  index: 'node-metrics-${yyyy.MM}'
+  index: 'node-metrics'

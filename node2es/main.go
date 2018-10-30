@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/hongxincn/promexp/node2es/config"
+	"github.com/hongxincn/promexp/node2es/es"
 	"github.com/hongxincn/promexp/node2es/prometheus"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -24,6 +25,11 @@ func main() {
 	kingpin.Parse()
 
 	err := config.LoadConfig(*configFile)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	err = es.NewEs5Client()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
