@@ -19,11 +19,17 @@ var (
 
 func main() {
 	var (
-		configFile = kingpin.Flag("config.file", "Configuration file").Default("node2es_config.yml").String()
+		configFile       = kingpin.Flag("config.file", "Configuration file").Default("node2es_config.yml").String()
+		keyToBeEncrypted = kingpin.Flag("encrypting.key", "encrypting inputted key, and exist immediately").String()
 	)
 	kingpin.HelpFlag.Short('h')
 	kingpin.Version(fmt.Sprintf("%s\n%s\n%s", VERSION, BUILD_TIME, GO_VERSION))
 	kingpin.Parse()
+
+	if *keyToBeEncrypted != "" {
+		fmt.Printf("Encrypted String\n%s\n", config.EncryptingString(*keyToBeEncrypted))
+		os.Exit(0)
+	}
 
 	err := config.LoadConfig(*configFile)
 	if err != nil {

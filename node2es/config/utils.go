@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/base64"
+	"fmt"
 
 	"github.com/hongxincn/promexp/node2es/common"
 )
@@ -21,4 +22,20 @@ func GetDecryptedPassword(encryptedPassword string) (string, error) {
 		return "", err
 	}
 	return decryptedPassword, nil
+}
+
+func EncryptingString(key string) string {
+	if key == "" {
+		return ""
+	}
+	aesEnc := common.AesEncrypt{Key: ENCRYPT_KEY}
+
+	rawBytes, err := aesEnc.Encrypt(key)
+
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+
+	return base64.StdEncoding.EncodeToString(rawBytes)
 }
