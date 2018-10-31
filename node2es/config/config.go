@@ -9,7 +9,7 @@ import (
 var Config Node2EsConfig
 
 const (
-	ENCRYPT_KEY = "node2es enc key"
+	ENCRYPT_KEY = "node2es_encryption_key"
 )
 
 type Node2EsConfig struct {

@@ -17,6 +17,7 @@ import (
 func LoadMetrics() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	t1 := time.Now().Unix()
 	url := config.Config.Prometheus.Url
 	client, err := api.NewClient(api.Config{Address: url})
 	if err != nil {
@@ -38,18 +39,28 @@ func LoadMetrics() {
 			}
 		}
 	}
+	index := es.GetIndex(t1)
 	for k, v := range nms.metrics {
 		vi := map[string]interface{}{}
 		for k2, v2 := range v {
 			vi[k2] = v2
 		}
 		vi["ip"] = k[:strings.Index(k, ":")]
-		vi["timestamp"] = time.Now().Unix()
+		vi["timestamp"] = t1
+
+		now := time.Now()
+		local1, err := time.LoadLocation("") //same as "UTC"
+		if err != nil {
+			fmt.Println(err)
+		}
+		sTimeProcessed := now.In(local1).Format("2006-01-02T15:04:05.000Z")
+		vi["@timestamp"] = sTimeProcessed
+
 		jsonBytes, err := json.Marshal(vi)
 		if err != nil {
 			fmt.Println("json marshal error, key=%s, value=%v", k, vi)
 		} else {
-			es.Client.AddBulkRequest(string(jsonBytes))
+			es.Client.AddBulkRequest(index, string(jsonBytes))
 		}
 	}
 	es.Client.SubmitBulkRequest()

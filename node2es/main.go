@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/hongxincn/promexp/node2es/config"
 	"github.com/hongxincn/promexp/node2es/es"
@@ -35,5 +36,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	prometheus.LoadMetrics()
+	c := time.Tick(time.Duration(60) * time.Second)
+	for {
+		prometheus.LoadMetrics()
+		<-c
+	}
 }

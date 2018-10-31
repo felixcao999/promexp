@@ -43,12 +43,10 @@ func NewEs5Client() error {
 	return nil
 }
 
-func (ec *EsClient) AddBulkRequest(msg string) {
+func (ec *EsClient) AddBulkRequest(index, msg string) {
 	if ec.bs == nil {
 		ec.bs = elastic.NewBulkService(ec.client)
 	}
-
-	index := config.Config.Es.Index
 
 	bir := elastic.NewBulkIndexRequest().Index(index).Type("doc").Doc(
 		string(msg))
