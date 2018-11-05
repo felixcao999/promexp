@@ -17,7 +17,6 @@ import (
 func LoadMetrics() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	t1 := time.Now().Unix()
 	url := config.Config.Prometheus.Url
 	client, err := api.NewClient(api.Config{Address: url})
 	if err != nil {
@@ -25,27 +24,34 @@ func LoadMetrics() {
 	}
 
 	query_api := v1.NewAPI(client)
-	queries := getPromQueries()
 	nms := NewNodeMetrics()
-	for k, v := range queries {
-		r, err := query_api.Query(ctx, v, time.Now())
+	ip_port_label := config.Config.Promql.Ip_port_label
+	now := time.Now()
+	for _, q := range config.Config.Promql.Querys {
+		if q.Keep_labels {
+			continue
+		}
+		r, err := query_api.Query(ctx, q.Query, now)
 		if err != nil {
-			fmt.Printf("Error occuried while querying, err: %v, query: %s \n", err, v)
+			fmt.Printf("Error occuried while querying, err: %v, query: %s \n", err, q.Query)
 		}
 		v, ok := r.(model.Vector)
 		if ok {
 			for _, vr := range v {
-				nms.Set(fmt.Sprintf("%v", vr.Metric["instance"]), k, (float64)(vr.Value))
+				nms.Set(fmt.Sprintf("%v", vr.Metric[model.LabelName(ip_port_label)]), q.Metric, (float64)(vr.Value))
 			}
 		}
 	}
+	t1 := time.Now().Unix()
 	index := es.GetIndex(t1)
 	for k, v := range nms.metrics {
 		vi := map[string]interface{}{}
 		for k2, v2 := range v {
 			vi[k2] = v2
 		}
-		vi["ip"] = k[:strings.Index(k, ":")]
+		vi["instance_id"] = k
+		vi["instance_ip"] = k[:strings.LastIndex(k, ":")]
+		vi["instance_port"] = k[strings.LastIndex(k, ":")+1:]
 		vi["timestamp"] = t1
 
 		now := time.Now()
@@ -58,7 +64,7 @@ func LoadMetrics() {
 
 		jsonBytes, err := json.Marshal(vi)
 		if err != nil {
-			fmt.Println("json marshal error, key=%s, value=%v", k, vi)
+			fmt.Printf("json marshal error, key=%s, value=%v \n", k, vi)
 		} else {
 			es.Client.AddBulkRequest(index, string(jsonBytes))
 		}

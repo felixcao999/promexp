@@ -12,7 +12,7 @@ type NodeMetrics struct {
 
 func NewNodeMetrics() *NodeMetrics {
 	return &NodeMetrics{
-		metrics: map[string]map[string]float64{},
+		metrics: map[string]map[string]float64{}, //key: instance_id
 	}
 }
 
@@ -23,6 +23,9 @@ func (nm *NodeMetrics) Set(node_addr, metric string, value float64) {
 	if !ok {
 		node_vs = make(map[string]float64)
 		nm.metrics[node_addr] = node_vs
+	}
+	if math.IsNaN(value) {
+		value = -1
 	}
 	node_vs[metric] = round(value, 2)
 }

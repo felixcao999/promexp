@@ -16,7 +16,7 @@ type EsClient struct {
 	bs     *elastic.BulkService
 }
 
-func NewEs5Client() error {
+func NewEsClient() error {
 	var esclient *elastic.Client
 	configuration := config.Config
 	if len(configuration.Es.Urls) == 0 {

@@ -22,6 +22,14 @@ type Node2EsConfig struct {
 		Password string
 		Index    string
 	}
+	Promql struct {
+		Ip_port_label string
+		Querys        []struct {
+			Metric      string
+			Query       string
+			Keep_labels bool
+		}
+	}
 }
 
 // LoadConfig loads the specified YAML configuration file.

@@ -2,4 +2,16 @@ prometheus:
   url: 'http://10.1.236.157:9090'
 es:
   urls: ['http://10.1.236.157:9200/']
-  index: 'node-metrics-${+yyyy.MM.dd}'
+  index: 'node-metrics-${+yyyy}'
+promql:
+  ip_port_label: 'instance'
+  querys:
+    - metric: 'cpu_usage'
+      query: '100 - (avg by (instance) (irate(node_cpu_seconds_total{ mode="idle"}[5m])) * 100)'
+    - metric: 'mem_usage'
+      query: '((node_memory_MemTotal_bytes - (node_memory_MemAvailable_bytes or (node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes)))/node_memory_MemTotal_bytes)*100'
+    - metric: 'load1'
+      query: 'node_load1'
+    - metric: 'disk_usage' 
+      query: '100-(sum by (instance,mountpoint, fstype, device)(node_filesystem_avail_bytes{fstype!~"rootfs|selinuxfs|autofs|rpc_pipefs|tmpfs|udev|none|devpts|sysfs|debugfs|fuse.*"}))/(sum by (instance,mountpoint, fstype, device) (node_filesystem_size_bytes{fstype!~"rootfs|selinuxfs|autofs|rpc_pipefs|tmpfs|udev|none|devpts|sysfs|debugfs|fuse.*"}))*100'
+      keep_labels: true
