@@ -3,17 +3,51 @@ package prometheus
 import (
 	"math"
 	"sync"
+
+	"github.com/prometheus/common/model"
 )
+
+type MetricWithLabel struct {
+	Labels model.Metric `json:"labels"`
+	Value  float64      `json:"value"`
+}
 
 type NodeMetrics struct {
 	sync.RWMutex
-	metrics map[string]map[string]float64
+	metrics             map[string]map[string]float64
+	metrics_with_labels map[string]map[string][]MetricWithLabel
 }
 
 func NewNodeMetrics() *NodeMetrics {
 	return &NodeMetrics{
-		metrics: map[string]map[string]float64{}, //key: instance_id
+		metrics:             map[string]map[string]float64{}, //key: instance_id
+		metrics_with_labels: map[string]map[string][]MetricWithLabel{},
 	}
+}
+
+func (nm *NodeMetrics) Add(node_addr, metric string, labels model.Metric, value float64, remove_label string) {
+	nm.Lock()
+	defer nm.Unlock()
+	if math.IsNaN(value) {
+		value = -1
+	}
+	node_vs, ok := nm.metrics_with_labels[node_addr]
+	if !ok {
+		node_vs = map[string][]MetricWithLabel{}
+		nm.metrics_with_labels[node_addr] = node_vs
+	}
+	v2, ok := node_vs[metric]
+	if !ok {
+		v2 = make([]MetricWithLabel, 0)
+		node_vs[metric] = v2
+	}
+	delete(labels, model.LabelName(remove_label))
+	mvl := MetricWithLabel{
+		Labels: labels,
+		Value:  round(value, 2),
+	}
+	v2 = append(v2, mvl)
+	node_vs[metric] = v2
 }
 
 func (nm *NodeMetrics) Set(node_addr, metric string, value float64) {

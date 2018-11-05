@@ -28,9 +28,6 @@ func LoadMetrics() {
 	ip_port_label := config.Config.Promql.Ip_port_label
 	now := time.Now()
 	for _, q := range config.Config.Promql.Querys {
-		if q.Keep_labels {
-			continue
-		}
 		r, err := query_api.Query(ctx, q.Query, now)
 		if err != nil {
 			fmt.Printf("Error occuried while querying, err: %v, query: %s \n", err, q.Query)
@@ -38,7 +35,11 @@ func LoadMetrics() {
 		v, ok := r.(model.Vector)
 		if ok {
 			for _, vr := range v {
-				nms.Set(fmt.Sprintf("%v", vr.Metric[model.LabelName(ip_port_label)]), q.Metric, (float64)(vr.Value))
+				if q.Keep_labels {
+					nms.Add(string(vr.Metric[model.LabelName(ip_port_label)]), q.Metric, vr.Metric, (float64)(vr.Value), ip_port_label)
+				} else {
+					nms.Set(string(vr.Metric[model.LabelName(ip_port_label)]), q.Metric, (float64)(vr.Value))
+				}
 			}
 		}
 	}
@@ -48,6 +49,10 @@ func LoadMetrics() {
 		vi := map[string]interface{}{}
 		for k2, v2 := range v {
 			vi[k2] = v2
+		}
+		mlv := nms.metrics_with_labels[k]
+		for k3, v3 := range mlv {
+			vi[k3] = v3
 		}
 		vi["instance_id"] = k
 		vi["instance_ip"] = k[:strings.LastIndex(k, ":")]
