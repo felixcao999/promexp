@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hongxincn/promexp/node2es/config"
@@ -26,9 +27,10 @@ func LoadMetrics() {
 	query_api := v1.NewAPI(client)
 	nms := NewNodeMetrics()
 	ip_port_label := config.Config.Promql.Ip_port_label
-	now := time.Now()
-	for _, q := range config.Config.Promql.Querys {
-		r, err := query_api.Query(ctx, q.Query, now)
+	var wg = sync.WaitGroup{}
+	getMetric := func(ctx context.Context, q config.PromQuery, qt time.Time) {
+		defer wg.Done()
+		r, err := query_api.Query(ctx, q.Query, qt)
 		if err != nil {
 			fmt.Printf("Error occuried while querying, err: %v, query: %s \n", err, q.Query)
 		}
@@ -43,8 +45,15 @@ func LoadMetrics() {
 			}
 		}
 	}
+	qt := time.Now()
+	for _, q := range config.Config.Promql.Querys {
+		wg.Add(1)
+		go getMetric(ctx, q, qt)
+	}
+	wg.Wait()
 	t1 := time.Now().Unix()
 	index := es.GetIndex(t1)
+	count := 0
 	for k, v := range nms.metrics {
 		vi := map[string]interface{}{}
 		for k2, v2 := range v {
@@ -72,6 +81,11 @@ func LoadMetrics() {
 			fmt.Printf("json marshal error, key=%s, value=%v \n", k, vi)
 		} else {
 			es.Client.AddBulkRequest(index, string(jsonBytes))
+			count++
+		}
+		if count >= 2000 {
+			es.Client.SubmitBulkRequest()
+			count = 0
 		}
 	}
 	es.Client.SubmitBulkRequest()

@@ -12,6 +12,12 @@ const (
 	ENCRYPT_KEY = "node2es_encryption_key"
 )
 
+type PromQuery struct {
+	Metric      string
+	Query       string
+	Keep_labels bool
+}
+
 type Node2EsConfig struct {
 	Prometheus struct {
 		Url string
@@ -24,11 +30,7 @@ type Node2EsConfig struct {
 	}
 	Promql struct {
 		Ip_port_label string
-		Querys        []struct {
-			Metric      string
-			Query       string
-			Keep_labels bool
-		}
+		Querys        []PromQuery
 	}
 }
 
