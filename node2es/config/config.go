@@ -29,6 +29,10 @@ type Node2EsConfig struct {
 		Index    string
 	}
 	Promql struct {
+		Instance_id struct {
+			Label, Regex, Replacement string
+			Is_ip_port                bool
+		}
 		Ip_port_label string
 		Querys        []PromQuery
 	}
@@ -42,6 +46,12 @@ func LoadConfig(filename string) error {
 	}
 
 	err = yaml.Unmarshal(content, &Config)
+	if Config.Promql.Instance_id.Regex == "" {
+		Config.Promql.Instance_id.Regex = "(.*)"
+	}
+	if Config.Promql.Instance_id.Replacement == "" {
+		Config.Promql.Instance_id.Replacement = "$1"
+	}
 	if err != nil {
 		return err
 	}

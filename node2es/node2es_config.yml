@@ -4,7 +4,11 @@ es:
   urls: ['http://10.1.236.157:9200/']
   index: 'node-metrics-${+yyyy}'
 promql:
-  ip_port_label: 'instance'
+  instance_id: 
+    label: 'instance'
+    regex: '(.*):.*'
+    replacement: '$1'
+    is_ip_port: false
   querys:
     - metric: 'cpu_usage'
       query: '100 - (avg by (instance) (irate(node_cpu_seconds_total{ mode="idle"}[5m])) * 100)'
@@ -15,3 +19,8 @@ promql:
     - metric: 'disk_usage' 
       query: '100-(sum by (instance,mountpoint, fstype, device)(node_filesystem_avail_bytes{fstype!~"rootfs|selinuxfs|autofs|rpc_pipefs|tmpfs|udev|none|devpts|sysfs|debugfs|fuse.*"}))/(sum by (instance,mountpoint, fstype, device) (node_filesystem_size_bytes{fstype!~"rootfs|selinuxfs|autofs|rpc_pipefs|tmpfs|udev|none|devpts|sysfs|debugfs|fuse.*"}))*100'
       keep_labels: true
+    - metric: 'uname_info'
+      query: 'node_uname_info'
+      keep_labels: true
+add_fields:
+  api_url: 'http://localhost:8888/' 

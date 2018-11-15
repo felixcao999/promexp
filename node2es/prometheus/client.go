@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -26,7 +27,7 @@ func LoadMetrics() {
 
 	query_api := v1.NewAPI(client)
 	nms := NewNodeMetrics()
-	ip_port_label := config.Config.Promql.Ip_port_label
+	instance_label := config.Config.Promql.Instance_id.Label
 	var wg = sync.WaitGroup{}
 	getMetric := func(ctx context.Context, q config.PromQuery, qt time.Time) {
 		defer wg.Done()
@@ -37,10 +38,13 @@ func LoadMetrics() {
 		v, ok := r.(model.Vector)
 		if ok {
 			for _, vr := range v {
+				instance_id_raw := string(vr.Metric[model.LabelName(instance_label)])
+				rep := regexp.MustCompile(config.Config.Promql.Instance_id.Regex)
+				instance_id_processed := rep.ReplaceAllString(instance_id_raw, config.Config.Promql.Instance_id.Replacement)
 				if q.Keep_labels {
-					nms.Add(string(vr.Metric[model.LabelName(ip_port_label)]), q.Metric, vr.Metric, (float64)(vr.Value), ip_port_label)
+					nms.Add(instance_id_processed, q.Metric, vr.Metric, (float64)(vr.Value), instance_label)
 				} else {
-					nms.Set(string(vr.Metric[model.LabelName(ip_port_label)]), q.Metric, (float64)(vr.Value))
+					nms.Set(instance_id_processed, q.Metric, (float64)(vr.Value))
 				}
 			}
 		}
@@ -64,8 +68,10 @@ func LoadMetrics() {
 			vi[k3] = v3
 		}
 		vi["instance_id"] = k
-		vi["instance_ip"] = k[:strings.LastIndex(k, ":")]
-		vi["instance_port"] = k[strings.LastIndex(k, ":")+1:]
+		if config.Config.Promql.Instance_id.Is_ip_port {
+			vi["instance_ip"] = k[:strings.LastIndex(k, ":")]
+			vi["instance_port"] = k[strings.LastIndex(k, ":")+1:]
+		}
 		vi["timestamp"] = t1
 
 		now := time.Now()
