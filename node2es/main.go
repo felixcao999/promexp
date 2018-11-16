@@ -52,15 +52,16 @@ func main() {
 		}
 	}()
 	fmt.Println("监听端口", config.Config.Listen_on)
-	addFieldsEndPoint := add.NewAddFields()
-	http.HandleFunc("/-/reload", func(w http.ResponseWriter, r *http.Request) {
-		addFieldsEndPoint.SetReloadFlag()
-		w.Write([]byte(`{"acknowledged":"true"}`))
-	})
-	http.HandleFunc("/-/instancesMapping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(addFieldsEndPoint.GetInstancesMapping())
-	})
-
+	if config.Config.Add_fields.Api_url != "" {
+		addFieldsEndPoint := add.NewAddFields()
+		http.HandleFunc("/-/reload", func(w http.ResponseWriter, r *http.Request) {
+			addFieldsEndPoint.SetReloadFlag()
+			w.Write([]byte(`{"acknowledged":"true"}`))
+		})
+		http.HandleFunc("/-/instancesMapping", func(w http.ResponseWriter, r *http.Request) {
+			w.Write(addFieldsEndPoint.GetInstancesMapping())
+		})
+	}
 	err = http.ListenAndServe(config.Config.Listen_on, nil)
 	if err != nil {
 		fmt.Println(err)

@@ -2,15 +2,13 @@ package prometheus
 
 import (
 	"math"
+	"strings"
 	"sync"
 
 	"github.com/prometheus/common/model"
 )
 
-type MetricWithLabel struct {
-	Labels model.Metric `json:"labels"`
-	Value  float64      `json:"value"`
-}
+type MetricWithLabel map[string]interface{}
 
 type NodeMetrics struct {
 	sync.RWMutex
@@ -42,10 +40,18 @@ func (nm *NodeMetrics) Add(node_addr, metric string, labels model.Metric, value 
 		node_vs[metric] = v2
 	}
 	delete(labels, model.LabelName(remove_label))
-	mvl := MetricWithLabel{
-		Labels: labels,
-		Value:  round(value, 2),
+
+	mvl := MetricWithLabel{}
+	for k, v := range labels {
+		label := string(k)
+		label_c := strings.ToUpper(label[:1]) + label[1:]
+		mvl[label_c] = v
 	}
+	mvl["Value"] = round(value, 2)
+	//	mvl := MetricWithLabel{
+	//		Labels: labels,
+	//		Value:  round(value, 2),
+	//	}
 	v2 = append(v2, mvl)
 	node_vs[metric] = v2
 }

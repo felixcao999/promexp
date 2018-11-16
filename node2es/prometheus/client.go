@@ -56,7 +56,7 @@ func LoadMetrics() {
 		go getMetric(ctx, q, qt)
 	}
 	wg.Wait()
-	t1 := time.Now().Unix()
+	t1 := qt.Unix()
 	index := es.GetIndex(t1)
 	count := 0
 	for k, v := range nms.metrics {
@@ -69,8 +69,10 @@ func LoadMetrics() {
 			vi[k3] = v3
 		}
 
-		afs := add.AddFieldsFromExternalApi.GetInstanceAddFields(k)
-		vi["add_fields"] = afs
+		if config.Config.Add_fields.Api_url != "" {
+			afs := add.AddFieldsFromExternalApi.GetInstanceAddFields(k)
+			vi["add_fields"] = afs
+		}
 
 		vi["instance_id"] = k
 		if config.Config.Promql.Instance_id.Is_ip_port {
@@ -79,7 +81,7 @@ func LoadMetrics() {
 		}
 		vi["timestamp"] = t1
 
-		now := time.Now()
+		now := qt                            //time.Now()
 		local1, err := time.LoadLocation("") //same as "UTC"
 		if err != nil {
 			fmt.Println(err)
@@ -99,5 +101,6 @@ func LoadMetrics() {
 			count = 0
 		}
 	}
+
 	es.Client.SubmitBulkRequest()
 }

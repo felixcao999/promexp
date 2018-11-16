@@ -22,13 +22,12 @@ type AddFields struct {
 }
 
 func NewAddFields() *AddFields {
-	af := &AddFields{
+	AddFieldsFromExternalApi = &AddFields{
 		api_url: config.Config.Add_fields.Api_url,
 	}
-	af.reload()
-	go af.checkIfNeedReload()
-	AddFieldsFromExternalApi = af
-	return af
+	AddFieldsFromExternalApi.reload()
+	go AddFieldsFromExternalApi.checkIfNeedReload()
+	return AddFieldsFromExternalApi
 }
 
 func (af *AddFields) checkIfNeedReload() {
@@ -55,7 +54,11 @@ func (af *AddFields) GetInstancesMapping() []byte {
 }
 
 func (af *AddFields) GetInstanceAddFields(instance_id string) map[string]string {
+
 	result := map[string]string{}
+	if af.api_url == "" {
+		return result
+	}
 	af.Lock()
 	defer af.Unlock()
 	value, ok := af.IntanceAddfields[instance_id]
