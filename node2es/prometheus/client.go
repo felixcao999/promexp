@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hongxincn/promexp/node2es/add"
 	"github.com/hongxincn/promexp/node2es/config"
 	"github.com/hongxincn/promexp/node2es/es"
 	"github.com/prometheus/client_golang/api"
@@ -67,6 +68,10 @@ func LoadMetrics() {
 		for k3, v3 := range mlv {
 			vi[k3] = v3
 		}
+
+		afs := add.AddFieldsFromExternalApi.GetInstanceAddFields(k)
+		vi["add_fields"] = afs
+
 		vi["instance_id"] = k
 		if config.Config.Promql.Instance_id.Is_ip_port {
 			vi["instance_ip"] = k[:strings.LastIndex(k, ":")]

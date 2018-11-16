@@ -19,6 +19,7 @@ type PromQuery struct {
 }
 
 type Node2EsConfig struct {
+	Listen_on  string
 	Prometheus struct {
 		Url string
 	}
@@ -35,6 +36,9 @@ type Node2EsConfig struct {
 		}
 		Ip_port_label string
 		Querys        []PromQuery
+	}
+	Add_fields struct {
+		Api_url string
 	}
 }
 

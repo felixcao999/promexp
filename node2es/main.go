@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
+	"github.com/hongxincn/promexp/node2es/add"
 	"github.com/hongxincn/promexp/node2es/config"
 	"github.com/hongxincn/promexp/node2es/es"
 	"github.com/hongxincn/promexp/node2es/prometheus"
@@ -43,8 +45,24 @@ func main() {
 	}
 
 	c := time.Tick(time.Duration(60) * time.Second)
-	for {
-		prometheus.LoadMetrics()
-		<-c
+	go func() {
+		for {
+			prometheus.LoadMetrics()
+			<-c
+		}
+	}()
+	fmt.Println("监听端口", config.Config.Listen_on)
+	addFieldsEndPoint := add.NewAddFields()
+	http.HandleFunc("/-/reload", func(w http.ResponseWriter, r *http.Request) {
+		addFieldsEndPoint.SetReloadFlag()
+		w.Write([]byte(`{"acknowledged":"true"}`))
+	})
+	http.HandleFunc("/-/instancesMapping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(addFieldsEndPoint.GetInstancesMapping())
+	})
+
+	err = http.ListenAndServe(config.Config.Listen_on, nil)
+	if err != nil {
+		fmt.Println(err)
 	}
 }

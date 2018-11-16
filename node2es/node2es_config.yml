@@ -1,3 +1,4 @@
+listen_on: ':9311'
 prometheus:
   url: 'http://10.1.236.157:9090'
 es:
@@ -23,4 +24,4 @@ promql:
       query: 'node_uname_info'
       keep_labels: true
 add_fields:
-  api_url: 'http://localhost:8888/' 
+  api_url: 'http://localhost:8888/nodeLabels' 
