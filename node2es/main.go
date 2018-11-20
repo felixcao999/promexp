@@ -44,14 +44,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	c := time.Tick(time.Duration(60) * time.Second)
-	go func() {
-		for {
-			prometheus.LoadMetrics()
-			<-c
-		}
-	}()
-	fmt.Println("监听端口", config.Config.Listen_on)
 	if config.Config.Add_fields.Api_url != "" {
 		addFieldsEndPoint := add.NewAddFields()
 		http.HandleFunc("/-/reload", func(w http.ResponseWriter, r *http.Request) {
@@ -62,6 +54,15 @@ func main() {
 			w.Write(addFieldsEndPoint.GetInstancesMapping())
 		})
 	}
+
+	c := time.Tick(time.Duration(60) * time.Second)
+	go func() {
+		for {
+			prometheus.LoadMetrics()
+			<-c
+		}
+	}()
+	fmt.Println("监听端口", config.Config.Listen_on)
 	err = http.ListenAndServe(config.Config.Listen_on, nil)
 	if err != nil {
 		fmt.Println(err)

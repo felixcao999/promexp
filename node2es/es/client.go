@@ -13,7 +13,7 @@ var Client *EsClient
 
 type EsClient struct {
 	client *elastic.Client
-	bs     *elastic.BulkService
+	//	bs     *elastic.BulkService
 }
 
 func NewEsClient() error {
@@ -43,22 +43,25 @@ func NewEsClient() error {
 	return nil
 }
 
-func (ec *EsClient) AddBulkRequest(index, msg string) {
-	if ec.bs == nil {
-		ec.bs = elastic.NewBulkService(ec.client)
+func (ec *EsClient) NewBulkService() *elastic.BulkService {
+	return elastic.NewBulkService(ec.client)
+}
+
+func (ec *EsClient) AddBulkRequest(bs *elastic.BulkService, index, msg string) {
+	if bs == nil {
+		return
 	}
 
 	bir := elastic.NewBulkIndexRequest().Index(index).Type("doc").Doc(
 		string(msg))
 
-	ec.bs.Add(bir)
+	bs.Add(bir)
 }
 
-func (ec *EsClient) SubmitBulkRequest() {
+func (ec *EsClient) SubmitBulkRequest(bs *elastic.BulkService) {
 	ctx := context.Background()
-	_, err := ec.bs.Do(ctx)
+	_, err := bs.Do(ctx)
 	if err != nil {
 		fmt.Println(err)
-		ec.bs = elastic.NewBulkService(ec.client)
 	}
 }
