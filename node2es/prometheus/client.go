@@ -18,7 +18,7 @@ import (
 )
 
 func LoadMetrics() {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	url := config.Config.Prometheus.Url
 	client, err := api.NewClient(api.Config{Address: url})
