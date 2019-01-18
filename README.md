@@ -1,2 +1,2 @@
 # promexp
-Some customized prometheus exporters that need data persistence to ES. 
+Query data from prometheus TSDB using promql and store the selected metrics to Elastic Search 
