@@ -24,10 +24,12 @@ type Node2EsConfig struct {
 		Url string
 	}
 	Es struct {
-		Urls     []string
-		Username string
-		Password string
-		Index    string
+		Urls         []string
+		Username     string
+		Password     string
+		Index        string
+		Version      float32
+		Default_type string
 	}
 	Promql struct {
 		Instance_id struct {
@@ -50,14 +52,21 @@ func LoadConfig(filename string) error {
 	}
 
 	err = yaml.Unmarshal(content, &Config)
+	if err != nil {
+		return err
+	}
 	if Config.Promql.Instance_id.Regex == "" {
 		Config.Promql.Instance_id.Regex = "(.*)"
 	}
 	if Config.Promql.Instance_id.Replacement == "" {
 		Config.Promql.Instance_id.Replacement = "$1"
 	}
-	if err != nil {
-		return err
+	if Config.Es.Default_type == "" {
+		if Config.Es.Version < 6 {
+			Config.Es.Default_type = "doc"
+		} else {
+			Config.Es.Default_type = "_doc"
+		}
 	}
 
 	return nil

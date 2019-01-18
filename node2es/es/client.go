@@ -52,7 +52,8 @@ func (ec *EsClient) AddBulkRequest(bs *elastic.BulkService, index, msg string) {
 		return
 	}
 
-	bir := elastic.NewBulkIndexRequest().Index(index).Type("doc").Doc(
+	indexType := config.Config.Es.Default_type
+	bir := elastic.NewBulkIndexRequest().Index(index).Type(indexType).Doc(
 		string(msg))
 
 	bs.Add(bir)
