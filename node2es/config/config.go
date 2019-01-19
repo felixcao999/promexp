@@ -62,7 +62,7 @@ func LoadConfig(filename string) error {
 		Config.Promql.Instance_id.Replacement = "$1"
 	}
 	if Config.Es.Default_type == "" {
-		if Config.Es.Version < 6 {
+		if Config.Es.Version != 0 && Config.Es.Version < 6 {
 			Config.Es.Default_type = "doc"
 		} else {
 			Config.Es.Default_type = "_doc"
