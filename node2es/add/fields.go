@@ -45,6 +45,8 @@ func (af *AddFields) SetReloadFlag() {
 }
 
 func (af *AddFields) GetInstancesMapping() []byte {
+	af.Lock()
+	defer af.Unlock()
 	v, err := json.Marshal(af)
 	if err != nil {
 		fmt.Println(err)
@@ -71,7 +73,9 @@ func (af *AddFields) GetInstanceAddFields(instance_id string) map[string]string 
 func (af *AddFields) reload() {
 	iaf := af.getAddFieldsData()
 	af.Lock()
-	af.IntanceAddfields = iaf
+	if len(iaf) != 0 {
+		af.IntanceAddfields = iaf
+	}
 	af.LoadTime = time.Now().Unix()
 	af.needReload = false
 	af.Unlock()
